@@ -72,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
                                 //Log.w("TestTag",data.getName() + data.getId() + data.getVersion());
                                 //Log.w("TestTag", data.toString());
                                 mDataArrayList.add(data);
+                                
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();

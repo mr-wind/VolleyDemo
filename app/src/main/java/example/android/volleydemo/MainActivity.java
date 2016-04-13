@@ -17,11 +17,15 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.NetworkImageView;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.gson.GsonBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
 
         //mQueue.add(stringRequest);
 
+
         //"http://192.168.191.1/get_data.json"这个参数是自己建的服务器，服务返回的是json数组
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest("http://192.168.191.1/get_data.json", null,
                 new Response.Listener<JSONObject>() {
@@ -74,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
         //mQueue.add(jsonObjectRequest);
+
 
         //"http://192.168.191.1/get_data.json"这个参数是自己建的服务器，服务返回的是json数组
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest("http://192.168.191.1/get_data.json",
@@ -104,9 +110,60 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
-        mQueue.add(jsonArrayRequest);
+        //mQueue.add(jsonArrayRequest);
 
 
+        //解析xml有点问题。。返回的中文会乱码。。之后再看。
+        XMLRequest xmlRequest = new XMLRequest(
+                "http://192.168.191.1/get_data.xml",
+                new Response.Listener<XmlPullParser>() {
+                    @Override
+                    public void onResponse(XmlPullParser response) {
+                        try {
+                            int eventType = response.getEventType();
+                            while (eventType != XmlPullParser.END_DOCUMENT) {
+                                switch (eventType) {
+                                    case XmlPullParser.START_TAG:
+                                        String nodeName = response.getName();
+                                        if ("city".equals(nodeName)) {
+                                            String pName = response.getAttributeValue(0);
+                                            Log.w("TAG", "pName is " + pName);
+                                        }
+                                        break;
+                                }
+                                eventType = response.next();
+                            }
+                        } catch (XmlPullParserException e) {
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("TAG","出错了：" + error.getMessage(), error);
+                    }
+                });
+        //mQueue.add(xmlRequest);
+
+        //只能对jsonObject进行这样的解析，不适用于jsonArray
+        GsonRequest<Data> gsonRequest = new GsonRequest<Data>("http://192.168.191.1/get_data.json", Data.class,
+                new Response.Listener<Data>() {
+                    @Override
+                    public void onResponse(Data data) {
+                        Log.w("TAG", data.toString());
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e("TAG", error.getMessage(), error);
+                    }
+                });
+
+        mQueue.add(gsonRequest);
     }
 
     /**
